@@ -1,62 +1,41 @@
-import { createComponentFactory, Spectator } from '@ngneat/spectator/jest';
-import { AttributionTableComponent } from './attribution-table.component';
-import { MockComponent } from 'ng-mocks';
-import { HeroiconComponent } from '@frk/ng-ui-core';
-import { PRODUCTS_SERVICE } from '@frk/ng-ui-extra';
-import { LoggerService } from '@frk/shared-utils';
-import { TranslateService } from '@frk/shared-utils';
-import { createLoggerMockService } from '@frk/shared-utils/mocks';
-import * as dayjs from 'dayjs';
+import dayjs from 'dayjs';
+
+// ... existing imports ...
 
 describe('AttributionTableComponent', () => {
-  let spectator: Spectator<AttributionTableComponent>;
-  let component: AttributionTableComponent;
+    // ... existing setup ...
 
-  const mockProductsService = {} as any;
-  const mockLoggerService = createLoggerMockService();
-  const translateService = new TranslateService(mockLoggerService, {});
+    describe('ngOnChanges', () => {
+        it('should format selectedAsOfDate to MM/DD/YYYY when a valid date is set', () => {
+            const testDate = '2024-05-20';
+            spectator.component.selectedAsOfDate.set(testDate);
+            spectator.component.ngOnChanges();
+            expect(spectator.component.selectedAsOfDate()).toBe(dayjs(testDate).format('MM/DD/YYYY'));
+        });
 
-  const createComponent = createComponentFactory({
-    component: AttributionTableComponent,
-    declarations: [MockComponent(HeroiconComponent)],
-    providers: [
-      { provide: PRODUCTS_SERVICE, useValue: mockProductsService },
-      { provide: LoggerService, useFactory: createLoggerMockService },
-      { provide: TranslateService, useValue: translateService },
-    ],
-  });
+        it('should not format selectedAsOfDate when it is null', () => {
+            spectator.component.selectedAsOfDate.set(null);
+            spectator.component.ngOnChanges();
+            expect(spectator.component.selectedAsOfDate()).toBeNull();
+        });
 
-  beforeEach(() => {
-    spectator = createComponent();
-    component = spectator.component;
-  });
+        it('should apply settingsAccessibilityId to tableData when present', () => {
+            const mockData = { someProp: 'value' } as unknown as FundAttributionGridDataTypes;
+            const modifiedData = { ...mockData, accessibilityId: 'modified' };
+            
+            spyOn(spectator.component, 'settingsAccessibilityId').and.returnValue(modifiedData);
+            
+            spectator.component.tableData.set(mockData);
+            spectator.component.ngOnChanges();
+            
+            expect(spectator.component.settingsAccessibilityId).toHaveBeenCalledWith(mockData);
+            expect(spectator.component.tableData()).toEqual(modifiedData);
+        });
 
-  it('should create the component', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should format selectedAsOfDate and update tableData on ngOnChanges', () => {
-    // Mock observables
-    const selectedAsOfDateMock = jasmine.createSpy('selectedAsOfDate')
-      .and.returnValue('2024-01-01');
-    selectedAsOfDateMock.set = jasmine.createSpy('selectedAsOfDate.set');
-
-    const tableDataMock = jasmine.createSpy('tableData')
-      .and.returnValue('table-value');
-    tableDataMock.set = jasmine.createSpy('tableData.set');
-
-    // Assign to component
-    component.selectedAsOfDate = selectedAsOfDateMock;
-    component.tableData = tableDataMock;
-
-    // Stub the internal function
-    spyOn(component, 'settingAccessibilityId').and.returnValue('mocked-id');
-
-    // Trigger the lifecycle method
-    component.ngOnChanges();
-
-    // Assert
-    expect(selectedAsOfDateMock.set).toHaveBeenCalledWith('01/01/2024');
-    expect(tableDataMock.set).toHaveBeenCalledWith('mocked-id');
-  });
+        it('should not modify tableData when it is null', () => {
+            spectator.component.tableData.set(null);
+            spectator.component.ngOnChanges();
+            expect(spectator.component.tableData()).toBeNull();
+        });
+    });
 });
