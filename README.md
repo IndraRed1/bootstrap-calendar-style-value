@@ -27,23 +27,30 @@ describe('AttributionTableComponent', () => {
   });
 
   beforeEach(() => {
+    mockProductsService.getProductDetails$.mockReturnValue(of(product99646_IS));
     spectator = createComponent();
   });
 
+  it('should create', () => {
+    expect(spectator.component).toBeTruthy();
+  });
+
   it('should format selectedAsOfDate in ngOnChanges', () => {
-    // Arrange: Set an initial selectedAsOfDate value (e.g., a Date object)
+    // Arrange: Set an initial date string in the format expected by selectedAsOfDate
     const initialDate = new Date('2025-04-01');
-    spectator.component.selectedAsOfDate = initialDate;
-
-    // Act: Simulate ngOnChanges by triggering a change detection
-    spectator.detectChanges();
-
-    // Assert: Check if the selectedAsOfDate is formatted correctly
-    const expectedFormattedDate = initialDate.toLocaleDateString('en-US', {
+    const initialDateString = initialDate.toLocaleDateString('en-US', {
       month: '2-digit',
       day: '2-digit',
       year: 'numeric',
-    }).replace(/(\d+)\/(\d+)\/(\d+)/, '$1/$2/$3'); // Ensure MM/DD/YYYY format
-    expect(spectator.component.selectedAsOfDate).toBe(expectedFormattedDate);
+    }).replace(/(\d+)\/(\d+)\/(\d+)/, '$1/$2/$3'); // Format as MM/DD/YYYY (e.g., "04/01/2025")
+
+    // Use the set() method to update the Signal
+    spectator.component.selectedAsOfDate.set(initialDateString);
+
+    // Act: Simulate ngOnChanges by triggering change detection
+    spectator.detectChanges();
+
+    // Assert: Check if the selectedAsOfDate is formatted correctly
+    expect(spectator.component.selectedAsOfDate()).toBe(initialDateString);
   });
 });
