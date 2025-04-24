@@ -1,3 +1,4 @@
+import { ModelSignal } from '@angular/core'; // or wherever it's defined in your project
 import { Spectator, createComponentFactory } from '@ngneat/spectator/jest';
 import { AttributionTableComponent } from './attribution-table.component';
 import dayjs from 'dayjs';
@@ -19,18 +20,23 @@ describe('AttributionTableComponent', () => {
     const mockSetSelectedDate = jest.fn();
     const mockSetTableData = jest.fn();
 
-    // Simulate model structure with set()
-    component.selectedAsOfDate = {
+    // Fully mocked ModelSignal
+    const mockSelectedAsOfDate: Partial<ModelSignal<string | null>> = {
       set: mockSetSelectedDate
-    } as any;
+    };
 
-    component.tableData = {
+    const mockTableData: Partial<ModelSignal<any>> = {
       set: mockSetTableData
-    } as any;
+    };
 
-    // Override the return values of selectedAsOfDate() and tableData()
+    // Assign mocks to the component
+    component.selectedAsOfDate = mockSelectedAsOfDate as ModelSignal<string | null>;
+    component.tableData = mockTableData as ModelSignal<any>;
+
+    // Mock return values for .value access
     jest.spyOn(component, 'selectedAsOfDate', 'get').mockReturnValue(() => dayjs('2025-04-24'));
     jest.spyOn(component, 'tableData', 'get').mockReturnValue(() => ({ set: mockSetTableData }));
+
     jest
       .spyOn(component as any, 'settingAccessibilityId')
       .mockReturnValue('mock-accessibility-id');
