@@ -1,25 +1,32 @@
 import { ModelSignal } from '@angular/core';
+import dayjs from 'dayjs';
 
-const mockSetSelectedDate = jest.fn();
-const mockSetTableData = jest.fn();
+it('should set formatted date and accessibility id when selectedAsOfDate and tableData are defined', () => {
+  const mockSetSelectedDate = jest.fn();
+  const mockSetTableData = jest.fn();
 
-const mockSelectedSignal: Partial<ModelSignal<string | null>> = {
-  set: mockSetSelectedDate,
-  value: '2025-04-24',
-};
+  // Create mock signals
+  const mockSelectedSignal = {
+    set: mockSetSelectedDate,
+    value: '2025-04-24',
+  } as unknown as ModelSignal<string | null>;
 
-const mockTableDataSignal: Partial<ModelSignal<any>> = {
-  set: mockSetTableData,
-  value: { someKey: 'someValue' },
-};
+  const mockTableDataSignal = {
+    set: mockSetTableData,
+    value: { someKey: 'value' },
+  } as unknown as ModelSignal<any>;
 
-component.selectedAsOfDate = mockSelectedSignal as ModelSignal<string | null>;
-component.tableData = mockTableDataSignal as ModelSignal<any>;
+  // Assign to component
+  component.selectedAsOfDate = mockSelectedSignal;
+  component.tableData = mockTableDataSignal;
 
-// Mock the accessibility id method
-jest.spyOn(component as any, 'settingAccessibilityId').mockReturnValue('mock-accessibility-id');
+  // Stub the method that generates the accessibility ID
+  jest.spyOn(component as any, 'settingAccessibilityId').mockReturnValue('mock-accessibility-id');
 
-component.ngOnChanges();
+  // Trigger ngOnChanges
+  component.ngOnChanges();
 
-expect(mockSetSelectedDate).toHaveBeenCalledWith('04/24/2025');
-expect(mockSetTableData).toHaveBeenCalledWith('mock-accessibility-id');
+  // Expectations
+  expect(mockSetSelectedDate).toHaveBeenCalledWith(dayjs('2025-04-24').format('MM/DD/YYYY'));
+  expect(mockSetTableData).toHaveBeenCalledWith('mock-accessibility-id');
+});
