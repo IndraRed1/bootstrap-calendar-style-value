@@ -1,49 +1,25 @@
-import { ModelSignal } from '@angular/core'; // or wherever it's defined in your project
-import { Spectator, createComponentFactory } from '@ngneat/spectator/jest';
-import { AttributionTableComponent } from './attribution-table.component';
-import dayjs from 'dayjs';
+import { ModelSignal } from '@angular/core';
 
-describe('AttributionTableComponent', () => {
-  let spectator: Spectator<AttributionTableComponent>;
-  let component: AttributionTableComponent;
+const mockSetSelectedDate = jest.fn();
+const mockSetTableData = jest.fn();
 
-  const createComponent = createComponentFactory({
-    component: AttributionTableComponent,
-  });
+const mockSelectedSignal: Partial<ModelSignal<string | null>> = {
+  set: mockSetSelectedDate,
+  value: '2025-04-24',
+};
 
-  beforeEach(() => {
-    spectator = createComponent();
-    component = spectator.component;
-  });
+const mockTableDataSignal: Partial<ModelSignal<any>> = {
+  set: mockSetTableData,
+  value: { someKey: 'someValue' },
+};
 
-  it('should set formatted date and accessibility id when selectedAsOfDate and tableData are defined', () => {
-    const mockSetSelectedDate = jest.fn();
-    const mockSetTableData = jest.fn();
+component.selectedAsOfDate = mockSelectedSignal as ModelSignal<string | null>;
+component.tableData = mockTableDataSignal as ModelSignal<any>;
 
-    // Fully mocked ModelSignal
-    const mockSelectedAsOfDate: Partial<ModelSignal<string | null>> = {
-      set: mockSetSelectedDate
-    };
+// Mock the accessibility id method
+jest.spyOn(component as any, 'settingAccessibilityId').mockReturnValue('mock-accessibility-id');
 
-    const mockTableData: Partial<ModelSignal<any>> = {
-      set: mockSetTableData
-    };
+component.ngOnChanges();
 
-    // Assign mocks to the component
-    component.selectedAsOfDate = mockSelectedAsOfDate as ModelSignal<string | null>;
-    component.tableData = mockTableData as ModelSignal<any>;
-
-    // Mock return values for .value access
-    jest.spyOn(component, 'selectedAsOfDate', 'get').mockReturnValue(() => dayjs('2025-04-24'));
-    jest.spyOn(component, 'tableData', 'get').mockReturnValue(() => ({ set: mockSetTableData }));
-
-    jest
-      .spyOn(component as any, 'settingAccessibilityId')
-      .mockReturnValue('mock-accessibility-id');
-
-    component.ngOnChanges();
-
-    expect(mockSetSelectedDate).toHaveBeenCalledWith('04/24/2025');
-    expect(mockSetTableData).toHaveBeenCalledWith('mock-accessibility-id');
-  });
-});
+expect(mockSetSelectedDate).toHaveBeenCalledWith('04/24/2025');
+expect(mockSetTableData).toHaveBeenCalledWith('mock-accessibility-id');
