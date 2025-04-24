@@ -1,30 +1,62 @@
-it('should update selectedAsOfDate and tableData on ngOnChanges', () => {
-  const selectedAsOfDateMock = {
-    get: jasmine.createSpy().and.returnValue('2024-01-01'),
-    set: jasmine.createSpy()
-  };
+import { createComponentFactory, Spectator } from '@ngneat/spectator/jest';
+import { AttributionTableComponent } from './attribution-table.component';
+import { MockComponent } from 'ng-mocks';
+import { HeroiconComponent } from '@frk/ng-ui-core';
+import { PRODUCTS_SERVICE } from '@frk/ng-ui-extra';
+import { LoggerService } from '@frk/shared-utils';
+import { TranslateService } from '@frk/shared-utils';
+import { createLoggerMockService } from '@frk/shared-utils/mocks';
+import * as dayjs from 'dayjs';
 
-  const tableDataMock = {
-    get: jasmine.createSpy().and.returnValue('mockTableData'),
-    set: jasmine.createSpy()
-  };
+describe('AttributionTableComponent', () => {
+  let spectator: Spectator<AttributionTableComponent>;
+  let component: AttributionTableComponent;
 
-  // Assign the mocks to the component
-  component.selectedAsOfDate = () => selectedAsOfDateMock.get();
-  component.selectedAsOfDate.set = selectedAsOfDateMock.set;
+  const mockProductsService = {} as any;
+  const mockLoggerService = createLoggerMockService();
+  const translateService = new TranslateService(mockLoggerService, {});
 
-  component.tableData = () => tableDataMock.get();
-  component.tableData.set = tableDataMock.set;
+  const createComponent = createComponentFactory({
+    component: AttributionTableComponent,
+    declarations: [MockComponent(HeroiconComponent)],
+    providers: [
+      { provide: PRODUCTS_SERVICE, useValue: mockProductsService },
+      { provide: LoggerService, useFactory: createLoggerMockService },
+      { provide: TranslateService, useValue: translateService },
+    ],
+  });
 
-  // Optional: stub the settingAccessibilityId function if it's doing something custom
-  spyOn(component, 'settingAccessibilityId').and.returnValue('accessibleId');
+  beforeEach(() => {
+    spectator = createComponent();
+    component = spectator.component;
+  });
 
-  // Trigger ngOnChanges
-  component.ngOnChanges();
+  it('should create the component', () => {
+    expect(component).toBeTruthy();
+  });
 
-  // Assert that the date is formatted and set correctly
-  expect(selectedAsOfDateMock.set).toHaveBeenCalledWith('01/01/2024');
+  it('should format selectedAsOfDate and update tableData on ngOnChanges', () => {
+    // Mock observables
+    const selectedAsOfDateMock = jasmine.createSpy('selectedAsOfDate')
+      .and.returnValue('2024-01-01');
+    selectedAsOfDateMock.set = jasmine.createSpy('selectedAsOfDate.set');
 
-  // Assert that tableData is updated with accessibility ID
-  expect(tableDataMock.set).toHaveBeenCalledWith('accessibleId');
+    const tableDataMock = jasmine.createSpy('tableData')
+      .and.returnValue('table-value');
+    tableDataMock.set = jasmine.createSpy('tableData.set');
+
+    // Assign to component
+    component.selectedAsOfDate = selectedAsOfDateMock;
+    component.tableData = tableDataMock;
+
+    // Stub the internal function
+    spyOn(component, 'settingAccessibilityId').and.returnValue('mocked-id');
+
+    // Trigger the lifecycle method
+    component.ngOnChanges();
+
+    // Assert
+    expect(selectedAsOfDateMock.set).toHaveBeenCalledWith('01/01/2024');
+    expect(tableDataMock.set).toHaveBeenCalledWith('mocked-id');
+  });
 });
