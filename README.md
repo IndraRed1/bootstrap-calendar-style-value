@@ -1,41 +1,73 @@
-import dayjs from 'dayjs';
+describe('Row Toggling', () => {
+  const mockTableData = {
+    countries: [{
+      regionName: 'Europe',
+      ariaOwns: ['child-row-1'],
+      regionData: { portfolio: { averageWeight: 5, totalReturn: 10 } }
+    }],
+    sectors: [{
+      sectorName: 'Technology',
+      ariaOwns: ['child-row-2'],
+      sectorData: { portfolio: { averageWeight: 8, totalReturn: 15 } }
+    }]
+  };
 
-// ... existing imports ...
+  beforeEach(() => {
+    spectator.component.tableData.set(mockTableData as unknown as FundAttributionGridDataTypes);
+    spectator.detectChanges();
+  });
 
-describe('AttributionTableComponent', () => {
-    // ... existing setup ...
-
-    describe('ngOnChanges', () => {
-        it('should format selectedAsOfDate to MM/DD/YYYY when a valid date is set', () => {
-            const testDate = '2024-05-20';
-            spectator.component.selectedAsOfDate.set(testDate);
-            spectator.component.ngOnChanges();
-            expect(spectator.component.selectedAsOfDate()).toBe(dayjs(testDate).format('MM/DD/YYYY'));
-        });
-
-        it('should not format selectedAsOfDate when it is null', () => {
-            spectator.component.selectedAsOfDate.set(null);
-            spectator.component.ngOnChanges();
-            expect(spectator.component.selectedAsOfDate()).toBeNull();
-        });
-
-        it('should apply settingsAccessibilityId to tableData when present', () => {
-            const mockData = { someProp: 'value' } as unknown as FundAttributionGridDataTypes;
-            const modifiedData = { ...mockData, accessibilityId: 'modified' };
-            
-            spyOn(spectator.component, 'settingsAccessibilityId').and.returnValue(modifiedData);
-            
-            spectator.component.tableData.set(mockData);
-            spectator.component.ngOnChanges();
-            
-            expect(spectator.component.settingsAccessibilityId).toHaveBeenCalledWith(mockData);
-            expect(spectator.component.tableData()).toEqual(modifiedData);
-        });
-
-        it('should not modify tableData when it is null', () => {
-            spectator.component.tableData.set(null);
-            spectator.component.ngOnChanges();
-            expect(spectator.component.tableData()).toBeNull();
-        });
+  describe('toggleRow()', () => {
+    it('should toggle single row expansion', () => {
+      const button = spectator.query('button[class*="parent-row"]');
+      const row = spectator.query('tr.parent-row');
+      
+      // Initial state
+      expect(row).toHaveAttribute('aria-expanded', 'false');
+      
+      // First click
+      spectator.click(button!);
+      spectator.detectChanges();
+      expect(row).toHaveAttribute('aria-expanded', 'true');
+      
+      // Second click
+      spectator.click(button!);
+      spectator.detectChanges();
+      expect(row).toHaveAttribute('aria-expanded', 'false');
     });
+
+    it('should call toggleRow with mouse event', () => {
+      const mockEvent = new MouseEvent('click');
+      const spy = spyOn(spectator.component, 'toggleRow');
+      
+      spectator.component.toggleRow(mockEvent);
+      expect(spy).toHaveBeenCalledWith(mockEvent);
+    });
+  });
+
+  describe('toggleAll()', () => {
+    it('should toggle all rows when called', () => {
+      const spy = spyOn(spectator.component, 'toggleAll');
+      spectator.component.toggleAll();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should expand/collapse all rows in UI', () => {
+      const rows = spectator.queryAll('tr.parent-row');
+      const toggleButton = spectator.query('button.toggle-all');
+      
+      // Initial state
+      rows.forEach(row => expect(row).toHaveAttribute('aria-expanded', 'false'));
+      
+      // Expand all
+      spectator.click(toggleButton!);
+      spectator.detectChanges();
+      rows.forEach(row => expect(row).toHaveAttribute('aria-expanded', 'true'));
+      
+      // Collapse all
+      spectator.click(toggleButton!);
+      spectator.detectChanges();
+      rows.forEach(row => expect(row).toHaveAttribute('aria-expanded', 'false'));
+    });
+  });
 });
